@@ -1,7 +1,11 @@
 package com.example.Graphy_Application.controller;
 
+import com.example.Graphy_Application.dto.ProductRequest;
+import com.example.Graphy_Application.dto.ProductResponse;
 import com.example.Graphy_Application.entity.Product;
 import com.example.Graphy_Application.service.ProductService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +46,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Integer id) {
+    public ResponseEntity<Product> getProductById(@NotNull @PathVariable Integer id) {
         logger.info("Get product by id request");
 
         long startTime  = System.currentTimeMillis();
@@ -58,21 +62,21 @@ public class ProductController {
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<List<Product>> filterProducts(
+    public ResponseEntity<List<ProductResponse>> filterProducts(
             @RequestParam(required = true) String category,
             @RequestParam(required = true) Integer priceMin,
             @RequestParam(required = true) Integer priceMax) {
 
         /**
          *  without - 232ms
-         *  with - 10ms
+         *  with cache - 10ms
          */
         logger.info("In Filter request.");
 
         long startTime  = System.currentTimeMillis();
 
         try {
-            List<Product> products = productService.getProductsByCategoryAndPriceRange(category, priceMin, priceMax);
+            List<ProductResponse> products = productService.getProductsByCategoryAndPriceRange(category, priceMin, priceMax);
             timeTaken(startTime);
             return ResponseEntity.ok(products);
         } catch (Exception e) {
@@ -82,8 +86,9 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> addProduct(@RequestBody Product product) {
+    public ResponseEntity<Product> addProduct(@Valid @RequestBody ProductRequest product) {
         try {
+
             Product savedProduct = productService.addProduct(product);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
         } catch (Exception e) {
@@ -93,7 +98,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody Product product) {
+    public ResponseEntity<Product> updateProduct(@NotNull @PathVariable Integer id,@Valid @RequestBody ProductRequest product) {
         try {
             Product updatedProduct = productService.updateProduct(id, product);
             return updatedProduct != null ? ResponseEntity.ok(updatedProduct) : ResponseEntity.notFound().build();
@@ -104,7 +109,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Integer id) {
+    public ResponseEntity<Boolean> deleteProduct(@NotNull @PathVariable Integer id) {
         try {
             boolean isDeleted = productService.deleteProduct(id);
             return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();

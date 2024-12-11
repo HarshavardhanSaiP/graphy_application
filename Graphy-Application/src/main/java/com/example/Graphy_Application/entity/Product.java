@@ -18,5 +18,6 @@ public class Product implements Serializable {
     private Integer price;
     private Integer stock;
     @Column(name = "is_deleted")
-    private Boolean isDeleted;
+    private Boolean isDeleted = false;
+
 }
